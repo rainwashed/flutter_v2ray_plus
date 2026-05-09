@@ -72,11 +72,35 @@ object XrayCoreManager {
             
             Utilities.copyAssets(context)
             startXrayProcess(context, configFile, xrayExecutable, config)
+            
+            // Verify Xray is actually running
+            if (!waitForXrayReady(config.LOCAL_API_PORT)) {
+                Log.e(TAG, "Xray failed health check after startup")
+                xrayProcess?.destroy()
+                xrayProcess = null
+                return false
+            }
+            
             Log.d(TAG, "Xray Core process started successfully")
             true
         }.onFailure {
             Log.e(TAG, "Failed to start Xray Core", it)
         }.getOrDefault(false)
+    }
+
+    private fun waitForXrayReady(apiPort: Int, timeoutMs: Long = 3000): Boolean {
+        val deadline = System.currentTimeMillis() + timeoutMs
+        while (System.currentTimeMillis() < deadline) {
+            try {
+                val socket = java.net.Socket()
+                socket.connect(java.net.InetSocketAddress("127.0.0.1", apiPort), 500)
+                socket.close()
+                return true
+            } catch (e: Exception) {
+                Thread.sleep(200)
+            }
+        }
+        return false
     }
 
     /**

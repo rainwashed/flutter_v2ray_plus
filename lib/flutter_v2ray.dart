@@ -7,8 +7,11 @@
 
 import 'dart:convert';
 
+import 'package:flutter/services.dart';
+
 import 'flutter_v2ray_platform_interface.dart';
 import 'model/auto_disconnect.dart';
+import 'model/vless_exception.dart';
 import 'model/vless_status.dart';
 import 'url/shadowsocks.dart';
 import 'url/socks.dart';
@@ -18,6 +21,7 @@ import 'url/vless.dart';
 import 'url/vmess.dart';
 
 export 'model/auto_disconnect.dart';
+export 'model/vless_exception.dart';
 export 'model/vless_status.dart';
 
 class FlutterV2ray {
@@ -103,6 +107,9 @@ class FlutterV2ray {
   ///     expiredNotificationMessage: "Your free VPN time has expired",
   ///   ),
   ///   ```
+  ///
+  /// Throws a [VlessException] if the native platform fails to establish the connection,
+  /// times out, or encounters a configuration error.
   Future<void> startVless({
     required String remark,
     required String config,
@@ -122,17 +129,21 @@ class FlutterV2ray {
       throw ArgumentError('The provided string is not valid JSON');
     }
 
-    await FlutterV2rayPlatform.instance.startVless(
-      remark: remark,
-      config: config,
-      blockedApps: blockedApps,
-      proxyOnly: proxyOnly,
-      bypassSubnets: bypassSubnets,
-      dnsServers: dnsServers,
-      notificationDisconnectButtonName: notificationDisconnectButtonName,
-      showNotificationDisconnectButton: showNotificationDisconnectButton,
-      autoDisconnect: autoDisconnect,
-    );
+    try {
+      await FlutterV2rayPlatform.instance.startVless(
+        remark: remark,
+        config: config,
+        blockedApps: blockedApps,
+        proxyOnly: proxyOnly,
+        bypassSubnets: bypassSubnets,
+        dnsServers: dnsServers,
+        notificationDisconnectButtonName: notificationDisconnectButtonName,
+        showNotificationDisconnectButton: showNotificationDisconnectButton,
+        autoDisconnect: autoDisconnect,
+      );
+    } on PlatformException catch (e) {
+      throw VlessException(e.code, e.message, e.details);
+    }
   }
 
   /// Stop FlutterVless service.
@@ -180,8 +191,9 @@ class FlutterV2ray {
   /// final newTime = await flutterV2ray.updateAutoDisconnectTime(10 * 60);
   /// ```
   Future<int> updateAutoDisconnectTime(int additionalSeconds) async {
-    return await FlutterV2rayPlatform.instance
-        .updateAutoDisconnectTime(additionalSeconds);
+    return await FlutterV2rayPlatform.instance.updateAutoDisconnectTime(
+      additionalSeconds,
+    );
   }
 
   /// Gets the current remaining auto-disconnect time in seconds.
@@ -263,4 +275,3 @@ class FlutterV2ray {
     return FlutterV2rayPlatform.instance.onStatusChanged;
   }
 }
-

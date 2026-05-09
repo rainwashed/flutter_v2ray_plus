@@ -107,6 +107,8 @@ class FlutterV2rayPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Activity
 
     // MARK: - Method Handlers
 
+    private var pendingStartResult: MethodChannel.Result? = null
+
     private fun handleStartVless(call: MethodCall, result: MethodChannel.Result) {
         val config = call.argument<String>("config")
         val proxyOnly = call.argument<Boolean>("proxy_only") ?: false
@@ -121,8 +123,14 @@ class FlutterV2rayPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Activity
             SHOW_NOTIFICATION_DISCONNECT_BUTTON = showDisconnectButton
         }
 
+        pendingStartResult = result
         startVpnService(xrayConfig, proxyOnly)
-        result.success(null)
+        
+        // Timeout if no state change
+        android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+            pendingStartResult?.error("TIMEOUT", "VPN connection timeout", null)
+            pendingStartResult = null
+        }, 10_000)
     }
 
     private fun buildXrayConfig(call: MethodCall, config: String) = XrayConfig().apply {
@@ -348,10 +356,18 @@ class FlutterV2rayPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Activity
 
             val state = intent.getSerializableExtra("STATE") as? AppConfigs.V2RAY_STATES
             val stateName = when (state) {
-                AppConfigs.V2RAY_STATES.V2RAY_CONNECTED -> "CONNECTED"
+                AppConfigs.V2RAY_STATES.V2RAY_CONNECTED -> {
+                    pendingStartResult?.success(null)
+                    pendingStartResult = null
+                    "CONNECTED"
+                }
                 AppConfigs.V2RAY_STATES.V2RAY_CONNECTING -> "CONNECTING"
                 AppConfigs.V2RAY_STATES.V2RAY_AUTO_DISCONNECTED -> "AUTO_DISCONNECTED"
-                else -> "DISCONNECTED"
+                else -> {
+                    pendingStartResult?.error("CONNECTION_FAILED", "Xray failed to start", null)
+                    pendingStartResult = null
+                    "DISCONNECTED"
+                }
             }
 
             val data = arrayListOf(
