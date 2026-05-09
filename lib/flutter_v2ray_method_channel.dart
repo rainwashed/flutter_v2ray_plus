@@ -40,6 +40,7 @@ class MethodChannelFlutterV2ray extends FlutterV2rayPlatform {
     bool proxyOnly = false,
     bool showNotificationDisconnectButton = true,
     AutoDisconnect? autoDisconnect,
+    int connectionTimeoutSeconds = 3,
   }) async {
     await methodChannel.invokeMethod('startVless', {
       "remark": remark,
@@ -51,6 +52,7 @@ class MethodChannelFlutterV2ray extends FlutterV2rayPlatform {
       "notificationDisconnectButtonName": notificationDisconnectButtonName,
       "showNotificationDisconnectButton": showNotificationDisconnectButton,
       "auto_disconnect": autoDisconnect?.toMap(),
+      "connectionTimeoutSeconds": connectionTimeoutSeconds,
     });
   }
 
@@ -90,13 +92,15 @@ class MethodChannelFlutterV2ray extends FlutterV2rayPlatform {
   @override
   Future<int> updateAutoDisconnectTime(int additionalSeconds) async {
     return await methodChannel.invokeMethod('updateAutoDisconnectTime', {
-      "additional_seconds": additionalSeconds,
-    }) ?? -1;
+          "additional_seconds": additionalSeconds,
+        }) ??
+        -1;
   }
 
   @override
   Future<int> getRemainingAutoDisconnectTime() async {
-    return await methodChannel.invokeMethod('getRemainingAutoDisconnectTime') ?? -1;
+    return await methodChannel.invokeMethod('getRemainingAutoDisconnectTime') ??
+        -1;
   }
 
   @override
@@ -116,7 +120,9 @@ class MethodChannelFlutterV2ray extends FlutterV2rayPlatform {
 
   @override
   Future<int> getAutoDisconnectTimestamp() async {
-    final timestamp = await methodChannel.invokeMethod<int>('getAutoDisconnectTimestamp');
+    final timestamp = await methodChannel.invokeMethod<int>(
+      'getAutoDisconnectTimestamp',
+    );
     return timestamp ?? 0;
   }
 
@@ -130,11 +136,11 @@ class MethodChannelFlutterV2ray extends FlutterV2rayPlatform {
         upload: int.parse(event[3]),
         download: int.parse(event[4]),
         state: event[5],
-        remainingTime: event.length > 6 && event[6] != null
-            ? int.tryParse(event[6].toString())
-            : null,
+        remainingTime:
+            event.length > 6 && event[6] != null
+                ? int.tryParse(event[6].toString())
+                : null,
       ),
     );
   }
 }
-

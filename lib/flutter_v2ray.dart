@@ -108,6 +108,12 @@ class FlutterV2ray {
   ///   ),
   ///   ```
   ///
+  /// connectionTimeoutSeconds:
+  ///
+  ///   The maximum time to wait for the VPN to successfully establish a connection.
+  ///
+  ///   Default: 3
+  ///
   /// Throws a [VlessException] if the native platform fails to establish the connection,
   /// times out, or encounters a configuration error.
   Future<void> startVless({
@@ -120,6 +126,7 @@ class FlutterV2ray {
     String notificationDisconnectButtonName = "DISCONNECT",
     bool showNotificationDisconnectButton = true,
     AutoDisconnect? autoDisconnect,
+    int connectionTimeoutSeconds = 3,
   }) async {
     try {
       if (jsonDecode(config) == null) {
@@ -140,6 +147,7 @@ class FlutterV2ray {
         notificationDisconnectButtonName: notificationDisconnectButtonName,
         showNotificationDisconnectButton: showNotificationDisconnectButton,
         autoDisconnect: autoDisconnect,
+        connectionTimeoutSeconds: connectionTimeoutSeconds,
       );
     } on PlatformException catch (e) {
       throw VlessException(e.code, e.message, e.details);

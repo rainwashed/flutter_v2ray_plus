@@ -113,6 +113,7 @@ class FlutterV2rayPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Activity
         val config = call.argument<String>("config")
         val proxyOnly = call.argument<Boolean>("proxy_only") ?: false
         val showDisconnectButton = call.argument<Boolean>("showNotificationDisconnectButton") ?: true
+        val connectionTimeoutSeconds = call.argument<Int>("connectionTimeoutSeconds") ?: 3
 
         if (config == null) {
             result.error("INVALID_CONFIG", "Config cannot be null", null)
@@ -130,7 +131,7 @@ class FlutterV2rayPlugin : FlutterPlugin, ActivityAware, PluginRegistry.Activity
         android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
             pendingStartResult?.error("TIMEOUT", "VPN connection timeout", null)
             pendingStartResult = null
-        }, 10_000)
+        }, connectionTimeoutSeconds * 1000L)
     }
 
     private fun buildXrayConfig(call: MethodCall, config: String) = XrayConfig().apply {

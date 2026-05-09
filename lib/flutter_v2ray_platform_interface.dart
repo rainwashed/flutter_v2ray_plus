@@ -51,6 +51,7 @@ abstract class FlutterV2rayPlatform extends PlatformInterface {
     bool proxyOnly = false,
     bool showNotificationDisconnectButton = true,
     AutoDisconnect? autoDisconnect,
+    int connectionTimeoutSeconds = 3,
   }) {
     throw UnimplementedError('startVless() has not been implemented.');
   }
@@ -102,9 +103,7 @@ abstract class FlutterV2rayPlatform extends PlatformInterface {
   /// Checks if VPN was auto-disconnected while app was killed.
   /// Returns true if auto-disconnect expired, false otherwise.
   Future<bool> wasAutoDisconnected() {
-    throw UnimplementedError(
-      'wasAutoDisconnected() has not been implemented.',
-    );
+    throw UnimplementedError('wasAutoDisconnected() has not been implemented.');
   }
 
   /// Clears the auto-disconnect expired flag.
@@ -119,11 +118,12 @@ abstract class FlutterV2rayPlatform extends PlatformInterface {
   ///
   /// Returns 0 if VPN was not auto-disconnected.
   Future<int> getAutoDisconnectTimestamp() {
-    throw UnimplementedError('getAutoDisconnectTimestamp() has not been implemented.');
+    throw UnimplementedError(
+      'getAutoDisconnectTimestamp() has not been implemented.',
+    );
   }
 
   Stream<VlessStatus> get onStatusChanged {
     throw UnimplementedError('onStatusChanged() has not been implemented.');
   }
 }
-
